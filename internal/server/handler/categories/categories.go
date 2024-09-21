@@ -15,6 +15,10 @@ type CategoriesProvider interface {
 }
 
 func GetCategories(provider CategoriesProvider) echo.HandlerFunc {
+	type Categories struct {
+		Categories []models.Category `json:"categories"`
+	}
+
 	return func(c echo.Context) error {
 		categories, err := provider.Categories(c.Request().Context())
 		switch {
@@ -24,7 +28,7 @@ func GetCategories(provider CategoriesProvider) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 		}
 
-		c.JSON(http.StatusOK, categories)
+		c.JSON(http.StatusOK, Categories{categories})
 
 		return nil
 	}

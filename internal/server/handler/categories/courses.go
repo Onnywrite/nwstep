@@ -31,6 +31,10 @@ func GetCourses(provider CoursesProvider, ratingProvider RatingProvider) echo.Ha
 		PhotoUrl      string `json:"photoUrl"`
 	}
 
+	type Courses struct {
+		Courses []Course `json:"courses"`
+	}
+
 	return func(c echo.Context) error {
 		id := c.Get("id").(string)
 		categoryIdStr := c.Param("category_id")
@@ -75,7 +79,7 @@ func GetCourses(provider CoursesProvider, ratingProvider RatingProvider) echo.Ha
 			}
 		}
 
-		c.JSON(http.StatusOK, outCourses)
+		c.JSON(http.StatusOK, Courses{outCourses})
 
 		return nil
 	}
