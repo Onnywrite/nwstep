@@ -1,0 +1,25 @@
+name: nwstep
+services:
+  postgres:
+    env_file: config/postgres.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    image: postgres:16.4-alpine3.20
+    user: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 2s
+      timeout: 2s
+      retries: 8
+  service:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 8000:8080
+    volumes:
+      - ./config:/etc/nwstep:ro
+      - ./migrations:/migrations
+    build: .
+volumes:
+  pgdata:

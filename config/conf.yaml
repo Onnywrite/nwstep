@@ -1,0 +1,2 @@
+conn: postgres://user:1234@postgres:5432/database?sslmode=disable
+port: 8080
