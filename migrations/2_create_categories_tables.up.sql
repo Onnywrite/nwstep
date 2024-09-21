@@ -2,7 +2,8 @@ CREATE TABLE categories (
     category_id SERIAL PRIMARY KEY,
     name VARCHAR(100),
     description VARCHAR(200),
-    photo_url VARCHAR(200)
+    photo_url VARCHAR(200),
+    background_url VARCHAR(200)
 );
 
 CREATE TABLE courses (

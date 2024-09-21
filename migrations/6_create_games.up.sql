@@ -25,12 +25,14 @@ CREATE TABLE games_questions (
     game_id INTEGER REFERENCES games,
     question_id INTEGER REFERENCES questions,
     start_at TIMESTAMP NOT NULL,
-    end_at TIMESTAMP NOT NULL
+    end_at TIMESTAMP NOT NULL,
+    UNIQUE(game_id, question_id)
 );
 
 CREATE TABLE questions_answers (
     id SERIAL PRIMARY KEY,
     game_question_id INTEGER REFERENCES games_questions,
     answer_id INTEGER REFERENCES answers,
-    user_id UUID REFERENCES users
+    user_id UUID REFERENCES users,
+    UNIQUE(answer_id, user_id, game_question_id)
 );
