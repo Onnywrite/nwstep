@@ -25,8 +25,8 @@ func (pg *PgStorage) SaveUser(ctx context.Context, user models.User,
 	result, tx, err := cuteql.GetSquirreled[models.User](ctx, pg.db,
 		squirrel.
 			Insert("users").
-			Columns("user_nickname", "user_login", "user_password_hash", "user_birthday").
-			Values(user.Nickname, user.Login, user.PasswordHash, user.Birthday).
+			Columns("nickname", "login", "password_hash").
+			Values(user.Nickname, user.Login, user.PasswordHash).
 			Suffix("RETURNING *").PlaceholderFormat(squirrel.Dollar),
 	)
 	if err != nil {
@@ -62,11 +62,11 @@ func (pg *PgStorage) UpdateUser(ctx context.Context,
 }
 
 func (pg *PgStorage) UserByLogin(ctx context.Context, login string) (*models.User, error) {
-	return pg.getUserWhere(ctx, squirrel.Eq{"user_login": login})
+	return pg.getUserWhere(ctx, squirrel.Eq{"login": login})
 }
 
 func (pg *PgStorage) UserByNickname(ctx context.Context, nickname string) (*models.User, error) {
-	return pg.getUserWhere(ctx, squirrel.Eq{"user_nickname": nickname})
+	return pg.getUserWhere(ctx, squirrel.Eq{"nickname": nickname})
 }
 
 func (pg *PgStorage) UserById(ctx context.Context, id uuid.UUID) (*models.User, error) {

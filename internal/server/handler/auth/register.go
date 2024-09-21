@@ -9,11 +9,19 @@ import (
 	"github.com/Onnywrite/nwstep/internal/domain/models"
 	"github.com/Onnywrite/nwstep/internal/domain/single"
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
+	"github.com/google/uuid"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type userProfile struct {
+	Id        uuid.UUID `json:"id"`
+	Login     string    `json:"login"`
+	Nickname  string    `json:"nickname"`
+	IsTeacher bool      `json:"isTeacher"`
+}
 
 type UserSaver interface {
 	SaveUser(context.Context, models.User) (*models.User, error)
@@ -21,10 +29,9 @@ type UserSaver interface {
 
 func PostRegister(saver UserSaver, secret string) echo.HandlerFunc {
 	type RegisterUser struct {
-		Nickname string  `json:"nickname" validate:"required,min=3,max=16"`
-		Login    string  `json:"login" validate:"required,min=3,max=16,alphanum"`
-		Password string  `json:"password" validate:"required,min=8,max=32"`
-		Birthday *string `json:"birthday" validate:"omitempty"`
+		Nickname string `json:"nickname" validate:"required,min=3,max=16"`
+		Login    string `json:"login" validate:"required,min=3,max=16,alphanum"`
+		Password string `json:"password" validate:"required,min=8,max=32"`
 	}
 
 	return func(c echo.Context) error {
@@ -44,11 +51,10 @@ func PostRegister(saver UserSaver, secret string) echo.HandlerFunc {
 		}
 		u.Password = string(hash)
 
-		profile, err := saver.SaveUser(c.Request().Context(), models.User{
+		savedUser, err := saver.SaveUser(c.Request().Context(), models.User{
 			Login:        u.Login,
 			Nickname:     u.Nickname,
 			PasswordHash: string(hash),
-			Birthday:     u.Birthday,
 		})
 		switch {
 		case errors.Is(err, cuteql.ErrUnique):
@@ -58,15 +64,21 @@ func PostRegister(saver UserSaver, secret string) echo.HandlerFunc {
 		default:
 		}
 
-		token, err := getToken(*profile, secret)
+		token, err := getToken(*savedUser, secret)
 		if err != nil {
 			return err
 		}
 
 		c.JSON(http.StatusOK, echo.Map{
-			"profile":     profile,
+			"profile": userProfile{
+				Id:        savedUser.Id,
+				Login:     savedUser.Login,
+				Nickname:  savedUser.Nickname,
+				IsTeacher: savedUser.IsTeacher,
+			},
 			"accessToken": token,
 		})
+
 		return nil
 	}
 }
@@ -110,6 +122,12 @@ func PostSignIn(provider UserProvider, secret string) echo.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, echo.Map{
+			"profile": userProfile{
+				Id:        usr.Id,
+				Login:     usr.Login,
+				Nickname:  usr.Nickname,
+				IsTeacher: usr.IsTeacher,
+			},
 			"accessToken": token,
 		})
 
@@ -122,6 +140,7 @@ func getToken(user models.User, secret string) (string, error) {
 		"id":    user.Id,
 		"login": user.Login,
 		"exp":   time.Now().Add(time.Hour * 168).Unix(),
+		"tchr":  user.IsTeacher,
 	})
 
 	tokenString, err := token.SignedString([]byte(secret))

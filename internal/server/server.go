@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Onnywrite/nwstep/internal/server/handler"
 	handlerauth "github.com/Onnywrite/nwstep/internal/server/handler/auth"
+	mw "github.com/Onnywrite/nwstep/internal/server/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -19,6 +21,7 @@ type Server struct {
 type UserRepo interface {
 	handlerauth.UserSaver
 	handlerauth.UserProvider
+	handler.UserByIdProvider
 }
 
 func New(port uint32, users UserRepo) *Server {
@@ -49,6 +52,7 @@ func (s *Server) initApi() {
 
 		auth.POST("/register", handlerauth.PostRegister(s.users, "secret"))
 		auth.POST("/sign-in", handlerauth.PostSignIn(s.users, "secret"))
+		auth.GET("/profile", handler.GetProfile(s.users), mw.Auth("secret"))
 	}
 }
 
