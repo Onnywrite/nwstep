@@ -65,12 +65,18 @@ func PutJoin(courseProvider CourseProvider,
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id").SetInternal(err)
 		}
 
+		categoryIdStr := c.Param("category_id")
+		categoryId, err := strconv.ParseInt(categoryIdStr, 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id").SetInternal(err)
+		}
+
 		alreadyInLobby := userInLobby.IsUserInLobby(c.Request().Context(), uid)
 		if alreadyInLobby {
 			return echo.NewHTTPError(http.StatusConflict, "user already in a lobby")
 		}
 
-		rating, err := ratingProvider.Rating(c.Request().Context(), uid, int(courseId))
+		rating, err := ratingProvider.Rating(c.Request().Context(), uid, int(categoryId))
 		switch {
 		case errors.Is(err, cuteql.ErrEmptyResult):
 			rating = 0
@@ -111,12 +117,8 @@ func PutJoin(courseProvider CourseProvider,
 			UserId: uid,
 			Health: 20,
 		})
-		switch {
-		case errors.Is(err, cuteql.ErrUnique):
-			return echo.NewHTTPError(http.StatusConflict, "user already in the game")
-		case err != nil:
+		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
-
 		}
 
 		playersCount, err := usersLobbyProvider.CountUsersInLobby(c.Request().Context(), game.Id)

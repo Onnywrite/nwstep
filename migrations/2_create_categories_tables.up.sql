@@ -19,5 +19,6 @@ CREATE TABLE ratings (
     id SERIAL PRIMARY KEY,
     user_id UUID REFERENCES users,
     category_id INTEGER REFERENCES categories,
-    rating INTEGER
+    rating INTEGER,
+    UNIQUE(user_id, category_id)
 );

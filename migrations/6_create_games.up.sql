@@ -33,4 +33,4 @@ CREATE TABLE questions_answers (
     game_question_id INTEGER REFERENCES games_questions,
     answer_id INTEGER REFERENCES answers,
     user_id UUID REFERENCES users
-)
+);

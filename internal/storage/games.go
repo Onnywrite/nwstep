@@ -12,8 +12,9 @@ import (
 func (pg *PgStorage) IsUserInLobby(ctx context.Context, uid uuid.UUID) bool {
 	lobbiesCount, tx, err := cuteql.Get[int](ctx, pg.db, `
 	SELECT COUNT(*)
-	FROM users
-	WHERE user_id = $1
+	FROM games_users
+	JOIN games ON games_users.game_id = games.game_id
+	WHERE user_id = $1 AND games.end_at IS NULL
 	`, uid)
 	if err != nil {
 		return false
