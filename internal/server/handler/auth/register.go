@@ -22,7 +22,7 @@ type UserSaver interface {
 func PostRegister(saver UserSaver, secret string) echo.HandlerFunc {
 	type RegisterUser struct {
 		Nickname string  `json:"nickname" validate:"required,min=3,max=16"`
-		Login    string  `json:"login" validate:"required,min=3,max=16"`
+		Login    string  `json:"login" validate:"required,min=3,max=16,alphanum"`
 		Password string  `json:"password" validate:"required,min=8,max=32"`
 		Birthday *string `json:"birthday" validate:"omitempty"`
 	}
@@ -50,27 +50,24 @@ func PostRegister(saver UserSaver, secret string) echo.HandlerFunc {
 			PasswordHash: string(hash),
 			Birthday:     u.Birthday,
 		})
-		status := http.StatusOK
-
 		switch {
-		case errors.Is(err, cuteql.ErrInternal):
-			status = http.StatusInternalServerError
+		case errors.Is(err, cuteql.ErrUnique):
+			return echo.NewHTTPError(http.StatusConflict, "user with this login exists").SetInternal(err)
 		case err != nil:
-			status = http.StatusConflict
+			return echo.NewHTTPError(http.StatusConflict, "internal error").SetInternal(err)
 		default:
-			token, err := getToken(*profile, secret)
-			if err != nil {
-				return err
-			}
-
-			c.JSON(status, echo.Map{
-				"profile":     profile,
-				"accessToken": token,
-			})
-			return nil
 		}
 
-		return echo.NewHTTPError(status, "internal error").SetInternal(err)
+		token, err := getToken(*profile, secret)
+		if err != nil {
+			return err
+		}
+
+		c.JSON(http.StatusOK, echo.Map{
+			"profile":     profile,
+			"accessToken": token,
+		})
+		return nil
 	}
 }
 
@@ -80,7 +77,7 @@ type UserProvider interface {
 
 func PostSignIn(provider UserProvider, secret string) echo.HandlerFunc {
 	type LoginUser struct {
-		Login    string `json:"login" validate:"required,min=3,max=16"`
+		Login    string `json:"login" validate:"required,min=3,max=16,alphanum"`
 		Password string `json:"password" validate:"required,min=8,max=32"`
 	}
 

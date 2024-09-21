@@ -64,7 +64,7 @@ func Get[T any](ctx context.Context,
 	if err != nil {
 		_ = tx.Rollback()
 
-		return nil, nil, fmt.Errorf("%w: could not scan result: %w", ErrInternal, err)
+		return nil, nil, fmt.Errorf("%w: could not scan result: %w", mapError(err), err)
 	}
 
 	return obj, tx, nil
