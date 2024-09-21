@@ -15,6 +15,7 @@ import (
 type Server struct {
 	e          *echo.Echo
 	address    string
+	secret     string
 	users      UserRepo
 	categories CategoriesRepo
 }
@@ -31,7 +32,7 @@ type CategoriesRepo interface {
 	handlercateg.RatingProvider
 }
 
-func New(port uint32, users UserRepo, categories CategoriesRepo) *Server {
+func New(port uint32, secret string, users UserRepo, categories CategoriesRepo) *Server {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.CORS(), middleware.Recover(), middleware.Logger())
@@ -39,6 +40,7 @@ func New(port uint32, users UserRepo, categories CategoriesRepo) *Server {
 	server := &Server{
 		e:          e,
 		address:    fmt.Sprintf(":%d", port),
+		secret:     secret,
 		users:      users,
 		categories: categories,
 	}
@@ -58,13 +60,13 @@ func (s *Server) initApi() {
 	{
 		auth := api.Group("/auth")
 
-		auth.POST("/register", handlerauth.PostRegister(s.users, "secret"))
-		auth.POST("/sign-in", handlerauth.PostSignIn(s.users, "secret"))
-		auth.GET("/profile", handlerauth.GetProfile(s.users), mw.Auth("secret"))
+		auth.POST("/register", handlerauth.PostRegister(s.users, s.secret))
+		auth.POST("/sign-in", handlerauth.PostSignIn(s.users, s.secret))
+		auth.GET("/profile", handlerauth.GetProfile(s.users), mw.Auth(s.secret))
 	}
 
 	{
-		categories := api.Group(("/categories"), mw.Auth("secret"))
+		categories := api.Group(("/categories"), mw.Auth(s.secret))
 
 		categories.GET("", handlercateg.GetCategories(s.categories))
 		categories.GET("/:category_id/courses", handlercateg.GetCourses(s.categories, s.categories))

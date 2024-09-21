@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	Port uint32 `env:"PORT"          env-default:"8080" yaml:"port"`
-	Conn string `env:"POSTGRES_CONN" yaml:"conn"`
+	Port   uint32 `env:"PORT"          env-default:"8080" yaml:"port"`
+	Conn   string `env:"POSTGRES_CONN" yaml:"conn"`
+	Secret string `env:"SECRET" yaml:"secret"`
 }
 
 func MustLoad(additionalPath string) *Config {
