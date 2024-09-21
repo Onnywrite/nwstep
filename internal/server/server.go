@@ -18,6 +18,7 @@ type Server struct {
 	secret     string
 	users      UserRepo
 	categories CategoriesRepo
+	games      GameRepo
 }
 
 type UserRepo interface {
@@ -29,10 +30,19 @@ type UserRepo interface {
 type CategoriesRepo interface {
 	handlercateg.CategoriesProvider
 	handlercateg.CoursesProvider
+	handlercateg.CourseProvider
 	handlercateg.RatingProvider
 }
 
-func New(port uint32, secret string, users UserRepo, categories CategoriesRepo) *Server {
+type GameRepo interface {
+	handlercateg.LobbyGameProvider
+	handlercateg.GameSaver
+	handlercateg.GameUserLinker
+	handlercateg.UsersInLobbyProvider
+	handlercateg.IsUserInLobbyProvider
+}
+
+func New(port uint32, secret string, users UserRepo, categories CategoriesRepo, games GameRepo) *Server {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.CORS(), middleware.Recover(), middleware.Logger())
@@ -43,6 +53,7 @@ func New(port uint32, secret string, users UserRepo, categories CategoriesRepo) 
 		secret:     secret,
 		users:      users,
 		categories: categories,
+		games:      games,
 	}
 
 	server.initApi()
@@ -70,7 +81,10 @@ func (s *Server) initApi() {
 
 		categories.GET("", handlercateg.GetCategories(s.categories))
 		categories.GET("/:category_id/courses", handlercateg.GetCourses(s.categories, s.categories))
+		categories.PUT("/:category_id/courses/:course_id/join",
+			handlercateg.PutJoin(s.categories, s.categories, s.games, s.games, s.games, s.games, s.games))
 	}
+
 }
 
 func (s *Server) Start() error {

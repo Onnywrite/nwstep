@@ -9,6 +9,18 @@ import (
 	"github.com/google/uuid"
 )
 
+func (pg *PgStorage) Course(ctx context.Context, id int) (*models.Course, error) {
+	course, tx, err := cuteql.Get[models.Course](ctx, pg.db, `
+	SELECT * FROM courses
+	WHERE course_id = $1
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return course, cuteql.Commit(tx)
+}
+
 func (pg *PgStorage) Courses(ctx context.Context, categId int64) ([]models.Course, error) {
 	courses, tx, err := cuteql.Query[models.Course](ctx, pg.db, `
 	SELECT * FROM courses
