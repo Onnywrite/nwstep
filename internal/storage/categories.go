@@ -28,3 +28,44 @@ func (pg *PgStorage) Rating(ctx context.Context, uid uuid.UUID, categId int) (in
 
 	return *rating, cuteql.Commit(tx)
 }
+
+func (pg *PgStorage) CategoryTop(ctx context.Context, categoryId, limit int) ([]models.TopUser, error) {
+	top, tx, err := cuteql.Query[models.TopUser](ctx, pg.db, `
+	SELECT
+		ROW_NUMBER() OVER (ORDER BY rating DESC) AS position,
+		users.user_id AS user_id,
+		users.nickname AS nickname,
+		ratings.rating AS rating
+	FROM ratings
+	JOIN users ON ratings.user_id = users.user_id
+	WHERE ratings.category_id = $1
+	LIMIT $2
+	`, categoryId, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return top, cuteql.Commit(tx)
+}
+
+func (pg *PgStorage) UserTopPosition(ctx context.Context, categoryId int, userId uuid.UUID) (*models.TopUser, error) {
+	userTop, tx, err := cuteql.Get[models.TopUser](ctx, pg.db, `
+	WITH top_users AS (
+		SELECT
+			ROW_NUMBER() OVER (ORDER BY rating DESC) AS position,
+			users.user_id AS user_id,
+			users.nickname AS nickname,
+			ratings.rating AS rating
+		FROM ratings
+		JOIN users ON ratings.user_id = users.user_id
+		WHERE ratings.category_id = $1
+	)
+	SELECT * FROM top_users
+	WHERE user_id = $2
+	`, categoryId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return userTop, cuteql.Commit(tx)
+}

@@ -32,6 +32,8 @@ type CategoriesRepo interface {
 	handlercateg.CoursesProvider
 	handlercateg.CourseProvider
 	handlercateg.RatingProvider
+	handlercateg.CategoryTopProvider
+	handlercateg.UserTopProvider
 }
 
 type GameRepo interface {
@@ -83,6 +85,7 @@ func (s *Server) initApi() {
 		categories.GET("/:category_id/courses", handlercateg.GetCourses(s.categories, s.categories))
 		categories.PUT("/:category_id/courses/:course_id/join",
 			handlercateg.PutJoin(s.categories, s.categories, s.games, s.games, s.games, s.games, s.games))
+		categories.GET("/:category_id/top", handlercateg.GetTop(s.categories, s.categories))
 	}
 
 }
