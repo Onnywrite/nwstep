@@ -5,34 +5,42 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Onnywrite/nwstep/internal/server/handler"
 	handlerauth "github.com/Onnywrite/nwstep/internal/server/handler/auth"
+	handlercateg "github.com/Onnywrite/nwstep/internal/server/handler/categories"
 	mw "github.com/Onnywrite/nwstep/internal/server/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 type Server struct {
-	e       *echo.Echo
-	address string
-	users   UserRepo
+	e          *echo.Echo
+	address    string
+	users      UserRepo
+	categories CategoriesRepo
 }
 
 type UserRepo interface {
 	handlerauth.UserSaver
 	handlerauth.UserProvider
-	handler.UserByIdProvider
+	handlerauth.UserByIdProvider
 }
 
-func New(port uint32, users UserRepo) *Server {
+type CategoriesRepo interface {
+	handlercateg.CategoriesProvider
+	handlercateg.CoursesProvider
+	handlercateg.RatingProvider
+}
+
+func New(port uint32, users UserRepo, categories CategoriesRepo) *Server {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.CORS(), middleware.Recover(), middleware.Logger())
 
 	server := &Server{
-		e:       e,
-		address: fmt.Sprintf(":%d", port),
-		users:   users,
+		e:          e,
+		address:    fmt.Sprintf(":%d", port),
+		users:      users,
+		categories: categories,
 	}
 
 	server.initApi()
@@ -52,7 +60,14 @@ func (s *Server) initApi() {
 
 		auth.POST("/register", handlerauth.PostRegister(s.users, "secret"))
 		auth.POST("/sign-in", handlerauth.PostSignIn(s.users, "secret"))
-		auth.GET("/profile", handler.GetProfile(s.users), mw.Auth("secret"))
+		auth.GET("/profile", handlerauth.GetProfile(s.users), mw.Auth("secret"))
+	}
+
+	{
+		categories := api.Group(("/categories"), mw.Auth("secret"))
+
+		categories.GET("", handlercateg.GetCategories(s.categories))
+		categories.GET("/:category_id/courses", handlercateg.GetCourses(s.categories, s.categories))
 	}
 }
 

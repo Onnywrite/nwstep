@@ -14,7 +14,7 @@ var (
 	ErrUnexpectedSigningMethod = errors.New("unexpected signing method")
 )
 
-func Auth(secret string) echo.MiddlewareFunc {
+func Auth(secret string, forTeacher ...bool) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			auth := c.Request().Header["Authorization"]
@@ -50,9 +50,14 @@ func Auth(secret string) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "token expired")
 			}
 
+			isTeacher := claims["tchr"].(bool)
+			if len(forTeacher) > 0 && isTeacher != forTeacher[0] {
+				return echo.NewHTTPError(http.StatusForbidden, "access denied")
+			}
+
 			c.Set("login", claims["login"].(string))
 			c.Set("id", claims["id"].(string))
-			c.Set("tchr", claims["tchr"].(bool))
+			c.Set("tchr", isTeacher)
 
 			return next(c)
 		}

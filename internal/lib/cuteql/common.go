@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
@@ -72,14 +71,10 @@ func mapError(err error) error {
 		stringErr = pgErr.Code
 	}
 
-	slog.Info(err.Error())
-
 	doneErr, ok := errorsMap[stringErr]
 	if !ok {
 		doneErr = ErrInternal
 	}
-
-	slog.Info(doneErr.Error())
 
 	return doneErr
 }
