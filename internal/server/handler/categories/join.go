@@ -115,7 +115,7 @@ func PutJoin(playerRequired int,
 		}
 
 		if playersCount == playerRequired {
-			err = pickRandomQuestions(c.Request().Context(), game.Id, randomQuestionsProvider, gameQuestionsSaver)
+			err = pickRandomQuestions(c.Request().Context(), game.CourseId, game.Id, randomQuestionsProvider, gameQuestionsSaver)
 			if err != nil {
 				return err
 			}
@@ -133,7 +133,7 @@ func PutJoin(playerRequired int,
 }
 
 type RandomQuestionsProvider interface {
-	RandomQuestions(ctx context.Context, catId, count int) ([]models.Question, error)
+	RandomQuestions(ctx context.Context, courseId, count int) ([]models.Question, error)
 }
 
 type GameQuestionsSaver interface {
@@ -141,11 +141,11 @@ type GameQuestionsSaver interface {
 }
 
 func pickRandomQuestions(ctx context.Context,
-	gameId int,
+	gameId, courseId int,
 	randomQuestionsProvider RandomQuestionsProvider,
 	gameQuestionsSaver GameQuestionsSaver,
 ) error {
-	randomQuestions, err := randomQuestionsProvider.RandomQuestions(ctx, gameId, 10)
+	randomQuestions, err := randomQuestionsProvider.RandomQuestions(ctx, courseId, 10)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 	}

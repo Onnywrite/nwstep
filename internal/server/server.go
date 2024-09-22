@@ -48,8 +48,7 @@ type GameRepo interface {
 }
 
 type QuestionRepo interface {
-	handlercateg.RandomQuestionsProvider
-	handlercateg.GameQuestionsSaver
+	handlercateg.RandomQuestionsPicker
 	handlergames.UsersInGameProvider
 	handlergames.GameProvider
 	handlergames.GameUpdater
@@ -57,7 +56,7 @@ type QuestionRepo interface {
 	handlergames.AnswersProvider
 }
 
-func New(port uint32, secret string, users UserRepo, categories CategoryRepo, games GameRepo /*questions QuestionRepo*/) *Server {
+func New(port uint32, secret string, users UserRepo, categories CategoryRepo, games GameRepo, questions QuestionRepo) *Server {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.CORS(), middleware.Recover(), middleware.Logger())
@@ -69,7 +68,7 @@ func New(port uint32, secret string, users UserRepo, categories CategoryRepo, ga
 		users:      users,
 		categories: categories,
 		games:      games,
-		// questions:  questions,
+		questions:  questions,
 	}
 
 	server.initApi()
@@ -104,19 +103,19 @@ func (s *Server) initApi() {
 			mw.IntParams("category_id"))
 		categories.PUT("/:category_id/courses/:course_id/join",
 			handlercateg.PutJoin(5, s.categories, s.categories, s.games, s.games,
-				s.games, s.games, s.games, s.questions, s.questions),
+				s.games, s.games, s.games, s.questions),
 			mw.IntParams("category_id", "course_id"))
 		categories.GET("/:category_id/top", handlercateg.GetTop(s.categories, s.categories),
 			mw.IntParams("category_id"))
 	}
 
-	// {
-	// 	games := api.Group("/games", mw.Auth(s.secret))
+	{
+		games := api.Group("/games", mw.Auth(s.secret))
 
-	// 	games.GET("/:game_id/currentQuestion", handlergames.GetCurrentQuestion(5, 15,
-	// 		s.games, s.questions, s.questions, s.questions, s.questions),
-	// 		mw.IntParams("game_id"))
-	// }
+		games.GET("/:game_id/currentQuestion", handlergames.GetCurrentQuestion(5, 15,
+			s.games, s.questions, s.questions, s.questions, s.questions),
+			mw.IntParams("game_id"))
+	}
 }
 
 func (s *Server) Start() error {

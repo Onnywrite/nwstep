@@ -20,7 +20,7 @@ type GameProvider interface {
 }
 
 type GameUpdater interface {
-	UpdateGame(context.Context, map[string]any) error
+	UpdateGame(context.Context, int, map[string]any) error
 }
 
 type GameQuestionProvider interface {
@@ -80,10 +80,23 @@ func GetCurrentQuestion(playersRequired, intervalSeconds int,
 		if game.LastQuestionTime == nil || time.Since(*game.LastQuestionTime) < time.Duration(intervalSeconds)*time.Second {
 			game.LastQuestionNumber++
 
-			err = gameUpdater.UpdateGame(c.Request().Context(), map[string]any{
+			err = gameUpdater.UpdateGame(c.Request().Context(), gameId, map[string]any{
 				"last_question_number": game.LastQuestionNumber,
 				"last_question_time":   time.Now(),
 			})
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+			}
+		}
+
+		// if it's the last question, end the game
+		if game.LastQuestionNumber == 10 {
+			err = gameUpdater.UpdateGame(c.Request().Context(), gameId, map[string]any{
+				"end_at": time.Now(),
+			})
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+			}
 		}
 
 		// in any case we return current question
@@ -118,10 +131,3 @@ func GetCurrentQuestion(playersRequired, intervalSeconds int,
 		return nil
 	}
 }
-
-// SELECT q.question, q.question_id
-// FROM questions AS q
-// INNER JOIN games_questions AS gq
-// ON q.question_id = gq.question_id
-// WHERE NOW() BETWEEN gq.start_at AND gq.end_at
-// AND game_id = 2;
