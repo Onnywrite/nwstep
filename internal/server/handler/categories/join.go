@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/Onnywrite/nwstep/internal/domain/models"
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
@@ -28,21 +27,24 @@ type GameUserLinker interface {
 	LinkUserGame(context.Context, models.UserInGame) error
 }
 
-type UsersInLobbyProvider interface {
-	CountUsersInLobby(context.Context, int) (int, error)
+type UsersInGameProvider interface {
+	CountUsersInGame(context.Context, int) (int, error)
 }
 
 type IsUserInLobbyProvider interface {
 	IsUserInLobby(context.Context, uuid.UUID) bool
 }
 
-func PutJoin(courseProvider CourseProvider,
+func PutJoin(playerRequired int,
+	courseProvider CourseProvider,
 	ratingProvider RatingProvider,
 	gameSaver GameSaver,
 	lobbyProvider LobbyGameProvider,
 	gameUserLinker GameUserLinker,
-	usersLobbyProvider UsersInLobbyProvider,
+	usersLobbyProvider UsersInGameProvider,
 	userInLobby IsUserInLobbyProvider,
+	randomQuestionsProvider RandomQuestionsProvider,
+	gameQuestionsSaver GameQuestionsSaver,
 ) echo.HandlerFunc {
 	type JoinedGame struct {
 		PlayersCount   int `json:"playersCount"`
@@ -52,31 +54,17 @@ func PutJoin(courseProvider CourseProvider,
 	}
 
 	return func(c echo.Context) error {
-		id := c.Get("id")
+		id := c.Get("id").(uuid.UUID)
 
-		uid, err := uuid.Parse(id.(string))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
-		}
+		courseId := c.Get("course_id").(int)
+		categoryId := c.Get("category_id").(int)
 
-		courseIdStr := c.Param("course_id")
-		courseId, err := strconv.ParseInt(courseIdStr, 10, 64)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id").SetInternal(err)
-		}
-
-		categoryIdStr := c.Param("category_id")
-		categoryId, err := strconv.ParseInt(categoryIdStr, 10, 64)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id").SetInternal(err)
-		}
-
-		alreadyInLobby := userInLobby.IsUserInLobby(c.Request().Context(), uid)
+		alreadyInLobby := userInLobby.IsUserInLobby(c.Request().Context(), id)
 		if alreadyInLobby {
 			return echo.NewHTTPError(http.StatusConflict, "user already in a lobby")
 		}
 
-		rating, err := ratingProvider.Rating(c.Request().Context(), uid, int(categoryId))
+		rating, err := ratingProvider.Rating(c.Request().Context(), id, int(categoryId))
 		switch {
 		case errors.Is(err, cuteql.ErrEmptyResult):
 			rating = 0
@@ -114,25 +102,68 @@ func PutJoin(courseProvider CourseProvider,
 
 		err = gameUserLinker.LinkUserGame(c.Request().Context(), models.UserInGame{
 			GameId: game.Id,
-			UserId: uid,
+			UserId: id,
 			Health: 20,
 		})
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 		}
 
-		playersCount, err := usersLobbyProvider.CountUsersInLobby(c.Request().Context(), game.Id)
+		playersCount, err := usersLobbyProvider.CountUsersInGame(c.Request().Context(), game.Id)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 		}
 
+		if playersCount == playerRequired {
+			err = pickRandomQuestions(c.Request().Context(), game.Id, randomQuestionsProvider, gameQuestionsSaver)
+			if err != nil {
+				return err
+			}
+		}
+
 		c.JSON(http.StatusOK, JoinedGame{
 			PlayersCount:   playersCount,
-			PlayerRequired: 5,
+			PlayerRequired: playerRequired,
 			CourseId:       course.Id,
 			GameId:         game.Id,
 		})
 
 		return nil
 	}
+}
+
+type RandomQuestionsProvider interface {
+	RandomQuestions(ctx context.Context, catId, count int) ([]models.Question, error)
+}
+
+type GameQuestionsSaver interface {
+	SaveGameQuestions(context.Context, ...models.GameQuestion) error
+}
+
+func pickRandomQuestions(ctx context.Context,
+	gameId int,
+	randomQuestionsProvider RandomQuestionsProvider,
+	gameQuestionsSaver GameQuestionsSaver,
+) error {
+	randomQuestions, err := randomQuestionsProvider.RandomQuestions(ctx, gameId, 10)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+	}
+
+	gameQuestions := make([]models.GameQuestion, len(randomQuestions))
+
+	for i, question := range randomQuestions {
+		gameQuestions[i] = models.GameQuestion{
+			GameId:     gameId,
+			QuestionId: question.Id,
+			Number:     i + 1,
+		}
+	}
+
+	err = gameQuestionsSaver.SaveGameQuestions(ctx, gameQuestions...)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+	}
+
+	return nil
 }

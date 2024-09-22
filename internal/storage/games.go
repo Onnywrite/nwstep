@@ -38,7 +38,7 @@ func (pg *PgStorage) LinkUserGame(ctx context.Context, ugame models.UserInGame) 
 	return cuteql.Commit(tx)
 }
 
-func (pg *PgStorage) CountUsersInLobby(ctx context.Context, gameId int) (int, error) {
+func (pg *PgStorage) CountUsersInGame(ctx context.Context, gameId int) (int, error) {
 	count, tx, err := cuteql.Get[int](ctx, pg.db, `
 	SELECT COUNT(*) FROM games_users
 	WHERE game_id = $1

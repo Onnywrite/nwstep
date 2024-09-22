@@ -19,7 +19,7 @@ func (pg *PgStorage) Course(ctx context.Context, id int) (*models.Course, error)
 	return course, cuteql.Commit(tx)
 }
 
-func (pg *PgStorage) Courses(ctx context.Context, categId int64) ([]models.Course, error) {
+func (pg *PgStorage) Courses(ctx context.Context, categId int) ([]models.Course, error) {
 	courses, tx, err := cuteql.Query[models.Course](ctx, pg.db, `
 	SELECT * FROM courses
 	WHERE category_id = $1

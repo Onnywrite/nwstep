@@ -17,14 +17,9 @@ type UserByIdProvider interface {
 
 func GetProfile(provider UserByIdProvider) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id := c.Get("id").(string)
+		id := c.Get("id").(uuid.UUID)
 
-		uid, err := uuid.Parse(id)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal error")
-		}
-
-		user, err := provider.UserById(c.Request().Context(), uid)
+		user, err := provider.UserById(c.Request().Context(), id)
 		switch {
 		case errors.Is(err, cuteql.ErrEmptyResult):
 			return echo.NewHTTPError(http.StatusNotFound, "user not found")

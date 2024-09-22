@@ -25,19 +25,8 @@ func GetTop(provider CategoryTopProvider, userTop UserTopProvider) echo.HandlerF
 	}
 
 	return func(c echo.Context) error {
-		id := c.Get("id")
-
-		uid, err := uuid.Parse(id.(string))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
-		}
-
-		categoryIdStr := c.Param("category_id")
-
-		categoryId, err := strconv.ParseInt(categoryIdStr, 10, 64)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid category id").SetInternal(err)
-		}
+		id := c.Get("id").(uuid.UUID)
+		categoryId := c.Get("category_id").(int)
 
 		topLimitStr := c.QueryParam("top")
 
@@ -51,7 +40,7 @@ func GetTop(provider CategoryTopProvider, userTop UserTopProvider) echo.HandlerF
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 		}
 
-		userTop, err := userTop.UserTopPosition(c.Request().Context(), int(categoryId), uid)
+		userTop, err := userTop.UserTopPosition(c.Request().Context(), int(categoryId), id)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 		}

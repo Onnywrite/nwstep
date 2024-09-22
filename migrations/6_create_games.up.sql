@@ -2,7 +2,9 @@ CREATE TABLE games (
     game_id SERIAL PRIMARY KEY,
     course_id INTEGER REFERENCES courses,
     start_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    end_at TIMESTAMP
+    end_at TIMESTAMP,
+    last_question_number INTEGER NOT NULL DEFAULT 0,
+    last_question_time TIMESTAMP
 );
 
 CREATE TABLE places (
@@ -19,13 +21,11 @@ CREATE TABLE games_users (
     UNIQUE(game_id, user_id)
 );
 
--- comment
 CREATE TABLE games_questions (
     id SERIAL PRIMARY KEY,
     game_id INTEGER REFERENCES games,
     question_id INTEGER REFERENCES questions,
-    start_at TIMESTAMP NOT NULL,
-    end_at TIMESTAMP NOT NULL,
+    number INTEGER NOT NULL,
     UNIQUE(game_id, question_id)
 );
 
@@ -34,5 +34,6 @@ CREATE TABLE questions_answers (
     game_question_id INTEGER REFERENCES games_questions,
     answer_id INTEGER REFERENCES answers,
     user_id UUID REFERENCES users,
+    answered_at TIMESTAMP NOT NULL DEFAULT NOW(),
     UNIQUE(answer_id, user_id, game_question_id)
 );

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/Onnywrite/nwstep/internal/domain/models"
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
@@ -13,7 +12,7 @@ import (
 )
 
 type CoursesProvider interface {
-	Courses(context.Context, int64) ([]models.Course, error)
+	Courses(context.Context, int) ([]models.Course, error)
 }
 
 type RatingProvider interface {
@@ -36,18 +35,8 @@ func GetCourses(provider CoursesProvider, ratingProvider RatingProvider) echo.Ha
 	}
 
 	return func(c echo.Context) error {
-		id := c.Get("id").(string)
-		categoryIdStr := c.Param("category_id")
-
-		categoryId, err := strconv.ParseInt(categoryIdStr, 10, 64)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid category id").SetInternal(err)
-		}
-
-		uid, err := uuid.Parse(id)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
-		}
+		id := c.Get("id").(uuid.UUID)
+		categoryId := c.Get("category_id").(int)
 
 		courses, err := provider.Courses(c.Request().Context(), categoryId)
 		switch {
@@ -57,7 +46,7 @@ func GetCourses(provider CoursesProvider, ratingProvider RatingProvider) echo.Ha
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 		}
 
-		rating, err := ratingProvider.Rating(c.Request().Context(), uid, int(categoryId))
+		rating, err := ratingProvider.Rating(c.Request().Context(), id, int(categoryId))
 		switch {
 		case errors.Is(err, cuteql.ErrEmptyResult):
 			rating = 0

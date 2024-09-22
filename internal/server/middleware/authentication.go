@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -55,8 +56,15 @@ func Auth(secret string, forTeacher ...bool) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusForbidden, "access denied")
 			}
 
+			idStr := claims["id"].(string)
+
+			id, err := uuid.Parse(idStr)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+			}
+
 			c.Set("login", claims["login"].(string))
-			c.Set("id", claims["id"].(string))
+			c.Set("id", id)
 			c.Set("tchr", isTeacher)
 
 			return next(c)
