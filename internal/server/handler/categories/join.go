@@ -43,8 +43,7 @@ func PutJoin(playerRequired int,
 	gameUserLinker GameUserLinker,
 	usersLobbyProvider UsersInGameProvider,
 	userInLobby IsUserInLobbyProvider,
-	randomQuestionsProvider RandomQuestionsProvider,
-	gameQuestionsSaver GameQuestionsSaver,
+	randomQuestionsPicker RandomQuestionsPicker,
 ) echo.HandlerFunc {
 	type JoinedGame struct {
 		PlayersCount   int `json:"playersCount"`
@@ -115,7 +114,7 @@ func PutJoin(playerRequired int,
 		}
 
 		if playersCount == playerRequired {
-			err = pickRandomQuestions(c.Request().Context(), game.CourseId, game.Id, randomQuestionsProvider, gameQuestionsSaver)
+			err = pickRandomQuestions(c.Request().Context(), game.CourseId, game.Id, randomQuestionsPicker)
 			if err != nil {
 				return err
 			}
@@ -132,35 +131,15 @@ func PutJoin(playerRequired int,
 	}
 }
 
-type RandomQuestionsProvider interface {
-	RandomQuestions(ctx context.Context, courseId, count int) ([]models.Question, error)
-}
-
-type GameQuestionsSaver interface {
-	SaveGameQuestions(context.Context, ...models.GameQuestion) error
+type RandomQuestionsPicker interface {
+	PickRandomQuestions(ctx context.Context, gameId, courseId, count int) error
 }
 
 func pickRandomQuestions(ctx context.Context,
 	gameId, courseId int,
-	randomQuestionsProvider RandomQuestionsProvider,
-	gameQuestionsSaver GameQuestionsSaver,
+	randomQuestionsPicker RandomQuestionsPicker,
 ) error {
-	randomQuestions, err := randomQuestionsProvider.RandomQuestions(ctx, courseId, 10)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
-	}
-
-	gameQuestions := make([]models.GameQuestion, len(randomQuestions))
-
-	for i, question := range randomQuestions {
-		gameQuestions[i] = models.GameQuestion{
-			GameId:     gameId,
-			QuestionId: question.Id,
-			Number:     i + 1,
-		}
-	}
-
-	err = gameQuestionsSaver.SaveGameQuestions(ctx, gameQuestions...)
+	err := randomQuestionsPicker.PickRandomQuestions(ctx, gameId, courseId, 10)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 	}
