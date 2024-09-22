@@ -19,6 +19,25 @@ type CategorySaver interface {
 	SaveCategory(context.Context, models.Category) (*models.Category, error)
 }
 
+type CategoryDeleter interface {
+	DeleteCategory(context.Context, int) error
+}
+
+func DeleteCategory(deleter CategoryDeleter) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		categoryId := c.Get("category_id").(int)
+
+		err := deleter.DeleteCategory(c.Request().Context(), categoryId)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+		}
+
+		c.NoContent(http.StatusNoContent)
+
+		return nil
+	}
+}
+
 func PostCategory(saver CategorySaver) echo.HandlerFunc {
 	type Category struct {
 		Name          string `json:"name" validate:"required,max=100"`

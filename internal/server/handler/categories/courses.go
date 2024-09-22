@@ -28,6 +28,25 @@ type AnswersProvider interface {
 	Answers(context.Context, int) ([]models.Answer, error)
 }
 
+type CourseDeleter interface {
+	DeleteCourse(context.Context, int) error
+}
+
+func DeleteCourse(deleter CourseDeleter) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		courseId := c.Get("course_id").(int)
+
+		err := deleter.DeleteCourse(c.Request().Context(), courseId)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+		}
+
+		c.NoContent(http.StatusNoContent)
+
+		return nil
+	}
+}
+
 func GetQuestions(provider QuestionsCoursesProvider, answProvider AnswersProvider) echo.HandlerFunc {
 	type Answer struct {
 		Id        int    `json:"id"`

@@ -8,6 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
+func (pg *PgStorage) DeleteCategory(ctx context.Context, categoryId int) error {
+	tx, err := cuteql.Execute(ctx, pg.db, `
+	DELETE FROM categories
+	WHERE category_id = $1
+	`, categoryId)
+	if err != nil {
+		return err
+	}
+
+	return cuteql.Commit(tx)
+}
+
 func (pg *PgStorage) SaveCategory(ctx context.Context, cat models.Category) (*models.Category, error) {
 	saved, tx, err := cuteql.Get[models.Category](ctx, pg.db, `
 	INSERT INTO categories (name, description, photo_url, background_url)

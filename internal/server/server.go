@@ -31,15 +31,16 @@ type UserRepo interface {
 
 type CategoryRepo interface {
 	handlercateg.CategoriesProvider
+	handlercateg.CategorySaver
 	handlercateg.CategoryProvider
+	handlercateg.CategoryTopProvider
+	handlercateg.CategoryDeleter
 	handlercateg.CoursesProvider
 	handlercateg.CourseProvider
-	handlercateg.RatingProvider
-	handlercateg.CategoryTopProvider
-	handlercateg.UserTopProvider
-	// idc
-	handlercateg.CategorySaver
 	handlercateg.CourseSaver
+	handlercateg.CourseDeleter
+	handlercateg.RatingProvider
+	handlercateg.UserTopProvider
 }
 
 type GameRepo interface {
@@ -104,6 +105,8 @@ func (s *Server) initApi() {
 		categories.POST("", handlercateg.PostCategory(s.categories), mw.Auth(s.secret, true))
 		categories.GET("", handlercateg.GetCategories(s.categories))
 
+		categories.DELETE("/:category_id", handlercateg.DeleteCategory(s.categories),
+			mw.IntParams("category_id"), mw.Auth(s.secret, true))
 		categories.GET("/:category_id",
 			handlercateg.GetCategory(s.categories),
 			mw.IntParams("category_id"))
@@ -124,6 +127,8 @@ func (s *Server) initApi() {
 	{
 		courses := api.Group("/courses", mw.Auth(s.secret, true))
 
+		courses.DELETE("/:course_id", handlercateg.DeleteCourse(s.categories),
+			mw.IntParams("course_id"))
 		courses.POST("/:course_id/questions", handlercateg.PostQuestion(s.questions, s.questions),
 			mw.IntParams("course_id"))
 

@@ -12,7 +12,7 @@ CREATE TABLE courses (
     description VARCHAR(200),
     min_rating INTEGER NOT NULL DEFAULT 0,
     optimal_rating INTEGER NOT NULL DEFAULT 0,
-    category_id INTEGER REFERENCES categories,
+    category_id INTEGER REFERENCES categories ON DELETE CASCADE,
     photo_url VARCHAR(200)
 );
 

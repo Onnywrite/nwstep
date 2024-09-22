@@ -7,6 +7,18 @@ import (
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
 )
 
+func (pg *PgStorage) DeleteCourse(ctx context.Context, courseId int) error {
+	tx, err := cuteql.Execute(ctx, pg.db, `
+	DELETE FROM courses
+	WHERE course_id = $1
+	`, courseId)
+	if err != nil {
+		return err
+	}
+
+	return cuteql.Commit(tx)
+}
+
 func (pg *PgStorage) Course(ctx context.Context, id int) (*models.Course, error) {
 	course, tx, err := cuteql.Get[models.Course](ctx, pg.db, `
 	SELECT * FROM courses
