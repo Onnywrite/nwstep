@@ -10,4 +10,5 @@ type User struct {
 	Nickname     string    `db:"nickname"`
 	PasswordHash string    `db:"password_hash"`
 	IsTeacher    bool      `db:"is_teacher"`
+	Pts          int       `db:"pts"`
 }

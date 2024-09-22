@@ -27,6 +27,11 @@ func GetTop(provider CategoryTopProvider, userTop UserTopProvider) echo.HandlerF
 	return func(c echo.Context) error {
 		id := c.Get("id").(uuid.UUID)
 		categoryId := c.Get("category_id").(int)
+		isTeacher := c.Get("tchr").(bool)
+
+		if isTeacher {
+			return echo.NewHTTPError(http.StatusForbidden, "teachers cannot have points")
+		}
 
 		topLimitStr := c.QueryParam("top")
 

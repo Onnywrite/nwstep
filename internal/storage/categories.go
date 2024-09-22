@@ -17,6 +17,18 @@ func (pg *PgStorage) Categories(ctx context.Context) ([]models.Category, error) 
 	return categories, cuteql.Commit(tx)
 }
 
+func (pg *PgStorage) CategoryById(ctx context.Context, id int) (*models.Category, error) {
+	category, tx, err := cuteql.Get[models.Category](ctx, pg.db, `
+	SELECT * FROM categories
+	WHERE category_id = $1
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return category, cuteql.Commit(tx)
+}
+
 func (pg *PgStorage) Rating(ctx context.Context, uid uuid.UUID, categId int) (int, error) {
 	rating, tx, err := cuteql.Get[int](ctx, pg.db, `
 	SELECT rating FROM ratings

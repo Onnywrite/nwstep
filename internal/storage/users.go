@@ -11,15 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-func (pg *PgStorage) TruncateTableUsers(ctx context.Context) error {
-	tx, err := cuteql.Execute(ctx, pg.db, `TRUNCATE TABLE users CASCADE`)
-	if err != nil {
-		return err
-	}
-
-	return cuteql.Commit(tx)
-}
-
 func (pg *PgStorage) SaveUser(ctx context.Context, user models.User,
 ) (*models.User, error) {
 	result, tx, err := cuteql.GetSquirreled[models.User](ctx, pg.db,
@@ -70,15 +61,23 @@ func (pg *PgStorage) UserByNickname(ctx context.Context, nickname string) (*mode
 }
 
 func (pg *PgStorage) UserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	return pg.getUserWhere(ctx, squirrel.Eq{"user_id": id})
+	return pg.getUserWhere(ctx, squirrel.Eq{"users.user_id": id})
 }
 
 func (pg *PgStorage) getUserWhere(ctx context.Context, where squirrel.Sqlizer,
 ) (*models.User, error) {
 	user, tx, err := cuteql.GetSquirreled[models.User](ctx, pg.db,
 		squirrel.
-			Select("*").
+			Select(
+				"users.user_id AS user_id",
+				"login",
+				"nickname",
+				"password_hash",
+				"is_teacher",
+				"SUM(ratings.rating) AS pts").
 			From("users").
+			Join("ratings ON users.user_id = ratings.user_id").
+			GroupBy("users.user_id", "ratings.id").
 			Where(where).PlaceholderFormat(squirrel.Dollar),
 	)
 	if err != nil {

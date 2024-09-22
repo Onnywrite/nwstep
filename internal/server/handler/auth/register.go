@@ -21,6 +21,7 @@ type userProfile struct {
 	Login     string    `json:"login"`
 	Nickname  string    `json:"nickname"`
 	IsTeacher bool      `json:"isTeacher"`
+	Pts       int       `json:"pts"`
 }
 
 type UserSaver interface {
@@ -127,6 +128,7 @@ func PostSignIn(provider UserProvider, secret string) echo.HandlerFunc {
 				Login:     usr.Login,
 				Nickname:  usr.Nickname,
 				IsTeacher: usr.IsTeacher,
+				Pts:       usr.Pts,
 			},
 			"accessToken": token,
 		})

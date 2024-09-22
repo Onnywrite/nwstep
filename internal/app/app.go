@@ -39,7 +39,7 @@ func (a *Application) MustRun(ctx context.Context) {
 		slog.Info("disconnected from database")
 	}()
 
-	server := server.New(a.cfg.Port, a.cfg.Secret, database, database, database, database)
+	server := server.New(a.cfg.Port, a.cfg.Secret, database, database, database)
 
 	err = server.Start()
 	if err != nil {

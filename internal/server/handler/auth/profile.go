@@ -24,7 +24,7 @@ func GetProfile(provider UserByIdProvider) echo.HandlerFunc {
 		case errors.Is(err, cuteql.ErrEmptyResult):
 			return echo.NewHTTPError(http.StatusNotFound, "user not found")
 		case err != nil:
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal error")
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
 		}
 
 		c.JSON(http.StatusOK, userProfile{
@@ -32,6 +32,7 @@ func GetProfile(provider UserByIdProvider) echo.HandlerFunc {
 			Login:     user.Login,
 			Nickname:  user.Nickname,
 			IsTeacher: user.IsTeacher,
+			Pts:       user.Pts,
 		})
 
 		return nil

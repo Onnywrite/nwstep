@@ -33,3 +33,25 @@ func GetCategories(provider CategoriesProvider) echo.HandlerFunc {
 		return nil
 	}
 }
+
+type CategoryProvider interface {
+	CategoryById(context.Context, int) (*models.Category, error)
+}
+
+func GetCategory(provider CategoryProvider) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		categoryId := c.Get("category_id").(int)
+
+		category, err := provider.CategoryById(c.Request().Context(), categoryId)
+		switch {
+		case errors.Is(err, cuteql.ErrEmptyResult):
+			return echo.NewHTTPError(http.StatusNotFound, "category not found")
+		case err != nil:
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+		}
+
+		c.JSON(http.StatusOK, category)
+
+		return nil
+	}
+}
