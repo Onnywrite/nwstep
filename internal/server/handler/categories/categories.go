@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Onnywrite/nwstep/internal/domain/models"
+	"github.com/Onnywrite/nwstep/internal/domain/single"
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
 	"github.com/labstack/echo/v4"
 )
@@ -14,22 +15,26 @@ type CategoriesProvider interface {
 	Categories(context.Context) ([]models.Category, error)
 }
 
-type CategoriesSaver interface {
+type CategorySaver interface {
 	SaveCategory(context.Context, models.Category) (*models.Category, error)
 }
 
-func PostCategory(saver CategoriesSaver) echo.HandlerFunc {
+func PostCategory(saver CategorySaver) echo.HandlerFunc {
 	type Category struct {
-		Name          string `json:"name"`
-		Description   string `json:"description"`
-		PhotoUrl      string `json:"photoUrl"`
-		BackgroundUrl string `json:"backgroundUrl"`
+		Name          string `json:"name" validate:"required,max=100"`
+		Description   string `json:"description" validate:"required,max=200"`
+		PhotoUrl      string `json:"photoUrl" validate:"required,max=200"`
+		BackgroundUrl string `json:"backgroundUrl" validate:"required,max=200"`
 	}
 
 	return func(c echo.Context) error {
 		var cat Category
 		if err := c.Bind(&cat); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid request").SetInternal(err)
+		}
+
+		if err := single.V.Struct(cat); err != nil {
+			return single.ValidationError(err)
 		}
 
 		saved, err := saver.SaveCategory(c.Request().Context(), models.Category{

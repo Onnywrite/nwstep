@@ -8,6 +8,32 @@ import (
 	"github.com/google/uuid"
 )
 
+func (pg *PgStorage) SaveCategory(ctx context.Context, cat models.Category) (*models.Category, error) {
+	saved, tx, err := cuteql.Get[models.Category](ctx, pg.db, `
+	INSERT INTO categories (name, description, photo_url, background_url)
+	VALUES ($1, $2, $3, $4)
+	RETURNING *
+	`, cat.Name, cat.Description, cat.PhotoUrl, cat.BackgroundUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return saved, cuteql.Commit(tx)
+}
+
+func (pg *PgStorage) SaveCourse(ctx context.Context, c models.Course) (*models.Course, error) {
+	course, tx, err := cuteql.Get[models.Course](ctx, pg.db, `
+	INSERT INTO courses (name, description, min_rating, optimal_rating, category_id, photo_url)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	RETURNING *
+	`, c.Name, c.Description, c.MinRating, c.OptimalRating, c.CategoryId, c.PhotoUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return course, cuteql.Commit(tx)
+}
+
 func (pg *PgStorage) Categories(ctx context.Context) ([]models.Category, error) {
 	categories, tx, err := cuteql.Query[models.Category](ctx, pg.db, `SELECT * FROM categories`)
 	if err != nil {

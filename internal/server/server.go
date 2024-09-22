@@ -37,6 +37,9 @@ type CategoryRepo interface {
 	handlercateg.RatingProvider
 	handlercateg.CategoryTopProvider
 	handlercateg.UserTopProvider
+	// idc
+	handlercateg.CategorySaver
+	handlercateg.CourseSaver
 }
 
 type GameRepo interface {
@@ -54,6 +57,8 @@ type QuestionRepo interface {
 	handlergames.GameUpdater
 	handlergames.GameQuestionProvider
 	handlergames.AnswersProvider
+	handlercateg.QuestionsSaver
+	handlercateg.AnswersSaver
 }
 
 func New(port uint32, secret string, users UserRepo, categories CategoryRepo, games GameRepo, questions QuestionRepo) *Server {
@@ -94,12 +99,17 @@ func (s *Server) initApi() {
 	{
 		categories := api.Group(("/categories"), mw.Auth(s.secret))
 
+		categories.POST("", handlercateg.PostCategory(s.categories), mw.Auth(s.secret, true))
 		categories.GET("", handlercateg.GetCategories(s.categories))
+
 		categories.GET("/:category_id",
 			handlercateg.GetCategory(s.categories),
 			mw.IntParams("category_id"))
 		categories.GET("/:category_id/courses",
 			handlercateg.GetCourses(s.categories, s.categories),
+			mw.IntParams("category_id"))
+		categories.POST("/:category_id/courses", handlercateg.PostCourse(s.categories),
+			mw.Auth(s.secret, true),
 			mw.IntParams("category_id"))
 		categories.PUT("/:category_id/courses/:course_id/join",
 			handlercateg.PutJoin(5, s.categories, s.categories, s.games, s.games,
@@ -108,6 +118,9 @@ func (s *Server) initApi() {
 		categories.GET("/:category_id/top", handlercateg.GetTop(s.categories, s.categories),
 			mw.IntParams("category_id"))
 	}
+
+	api.POST("/courses/:course_id/questions", handlercateg.PostQuestion(s.questions, s.questions),
+		mw.IntParams("course_id"), mw.Auth(s.secret, true))
 
 	{
 		games := api.Group("/games", mw.Auth(s.secret))
