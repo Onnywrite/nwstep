@@ -9,6 +9,20 @@ import (
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
 )
 
+func (pg *PgStorage) GetRandomQuestions(ctx context.Context, courseId, count int) ([]models.Question, error) {
+	questions, tx, err := cuteql.Query[models.Question](ctx, pg.db, `
+	SELECT * FROM questions
+	WHERE course_id = $1
+	ORDER BY RANDOM()
+	LIMIT $2
+	`, courseId, count)
+	if err != nil {
+		return nil, err
+	}
+
+	return questions, cuteql.Commit(tx)
+}
+
 func (pg *PgStorage) Questions(ctx context.Context, courseId int) ([]models.Question, error) {
 	questions, tx, err := cuteql.Query[models.Question](ctx, pg.db, `
 	SELECT * FROM questions

@@ -60,6 +60,7 @@ type QuestionRepo interface {
 	handlercateg.QuestionsSaver
 	handlercateg.AnswersSaver
 	handlercateg.QuestionsCoursesProvider
+	handlercateg.RandomQuestionsProvider
 }
 
 func New(port uint32, secret string, users UserRepo, categories CategoryRepo, games GameRepo, questions QuestionRepo) *Server {
@@ -127,6 +128,8 @@ func (s *Server) initApi() {
 			mw.IntParams("course_id"))
 
 		courses.GET("/:course_id/questions", handlercateg.GetQuestions(s.questions, s.questions),
+			mw.IntParams("course_id"))
+		courses.GET("/:course_id/questions/rand", handlercateg.GetQuestionsRand(s.questions, s.questions),
 			mw.IntParams("course_id"))
 	}
 
