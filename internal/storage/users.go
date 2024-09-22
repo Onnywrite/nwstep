@@ -74,9 +74,9 @@ func (pg *PgStorage) getUserWhere(ctx context.Context, where squirrel.Sqlizer,
 				"nickname",
 				"password_hash",
 				"is_teacher",
-				"SUM(ratings.rating) AS pts").
+				"COALESCE(SUM(ratings.rating), 0) AS pts").
 			From("users").
-			Join("ratings ON users.user_id = ratings.user_id").
+			LeftJoin("ratings ON users.user_id = ratings.user_id").
 			GroupBy("users.user_id", "ratings.id").
 			Where(where).PlaceholderFormat(squirrel.Dollar),
 	)
