@@ -1,6 +1,6 @@
-INSERT INTO categories (category_id, name, description, photo_url)
+INSERT INTO categories (category_id, name, description, photo_url, background_url)
 VALUES  
-(2,'ВЕБ-ФРЕЙМВОРКИ', 'изучение различных направлений веб-разработки', 'https://frankfurt.apollo.olxcdn.com/v1/files/yotk6yerz8x63-UZ/image;s=1080x735');
+(2,'ВЕБ-ФРЕЙМВОРКИ', 'изучение различных направлений веб-разработки', 'https://frankfurt.apollo.olxcdn.com/v1/files/yotk6yerz8x63-UZ/image;s=1080x735', 'https://i.pinimg.com/564x/59/76/ec/5976ecb9a136c0b40967e9fb8ee48e21.jpg');
 
 INSERT INTO courses  
 (name, description, min_rating, optimal_rating, category_id, photo_url) 
@@ -97,9 +97,9 @@ INSERT INTO answers (answer, question_id, is_correct) values
 ('Запрос, который не блокирует основной поток выполнения программы.', 24, FALSE);
 
 
-INSERT INTO categories (category_id, name, description, photo_url)
+INSERT INTO categories (category_id, name, description, photo_url, background_url)
 VALUES  
-(3, 'МОБИЛЬНАЯ РАЗРАБОТКА', 'изучение разработки приложений для мобильных платформ', 'https://i.pinimg.com/736x/28/ec/e5/28ece574570a14034716faba99e1e92c.jpg');
+(3, 'МОБИЛЬНАЯ РАЗРАБОТКА', 'изучение разработки приложений для мобильных платформ', 'https://i.pinimg.com/736x/28/ec/e5/28ece574570a14034716faba99e1e92c.jpg', 'https://i.pinimg.com/564x/05/e6/cf/05e6cfb35ef994b22bde2512fe3d3049.jpg');
 
 INSERT INTO courses  
 (name, description, min_rating, optimal_rating, category_id, photo_url) 

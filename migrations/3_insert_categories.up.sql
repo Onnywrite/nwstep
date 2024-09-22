@@ -1,5 +1,5 @@
-INSERT INTO categories (category_id, name, description, photo_url)
-VALUES (1, 'Языки программирования', 'Различные языки программирования', 'https://www.theschoolrun.com/sites/theschoolrun.com/files/article_images/what_is_a_programming_language.jpg');
+INSERT INTO categories (category_id, name, description, photo_url, background_url)
+VALUES (1, 'Языки программирования', 'Различные языки программирования', 'https://www.theschoolrun.com/sites/theschoolrun.com/files/article_images/what_is_a_programming_language.jpg', 'https://i.pinimg.com/736x/db/71/5f/db715f3f37f54dbd809186aeb307c6dd.jpg');
 
 INSERT INTO courses (name, description, min_rating, optimal_rating, category_id, photo_url) VALUES
 ('Основы JavaScript', 'Пришло время начать ваш путь с бравого языка..', 0, 0, 1, 'https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png'),
