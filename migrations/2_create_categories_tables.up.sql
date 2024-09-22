@@ -19,7 +19,7 @@ CREATE TABLE courses (
 CREATE TABLE ratings (
     id SERIAL PRIMARY KEY,
     user_id UUID REFERENCES users,
-    category_id INTEGER REFERENCES categories,
+    category_id INTEGER REFERENCES categories ON DELETE CASCADE,
     rating INTEGER,
     UNIQUE(user_id, category_id)
 );

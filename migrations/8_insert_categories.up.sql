@@ -5,7 +5,7 @@ VALUES
 INSERT INTO courses  
 (name, description, min_rating, optimal_rating, category_id, photo_url) 
 VALUES
-('Изучение backend-разработки Python', 'питончик', 0, 0, 2, 'https://bilgi.uz/upload/resize_cache/iblock/5c7/6n0932l2qee6wh5guz0n50ftv72yhcfe/0_350_2/2.png');
+('Изучение backend-разработки Python', 'Стань профессиональным разработчиком распределённых систем на Python', 0, 0, 2, 'https://bilgi.uz/upload/resize_cache/iblock/5c7/6n0932l2qee6wh5guz0n50ftv72yhcfe/0_350_2/2.png');
 
 INSERT INTO questions (question, course_id)
 values
@@ -200,3 +200,8 @@ INSERT INTO courses
 VALUES
 ('Основы веб-разработки с использованием React и Redux.', 'front-end разработка', 100, 300, 2, 'https://i.pinimg.com/736x/cb/07/cf/cb07cfa10b0fad38e078dee3784d5e1a.jpg'),
 ('Веб-разработка на Go: создание эффективных и масштабируемых веб-приложений', 'back-end разработка', 100, 300, 2, 'https://i.pinimg.com/736x/cb/07/cf/cb07cfa10b0fad38e078dee3784d5e1a.jpg');
+
+ALTER SEQUENCE categories_category_id_seq RESTART WITH 4;
+ALTER SEQUENCE answers_answer_id_seq RESTART WITH 153;
+ALTER SEQUENCE questions_question_id_seq RESTART WITH 39;
+ALTER SEQUENCE courses_course_id_seq RESTART WITH 10;
