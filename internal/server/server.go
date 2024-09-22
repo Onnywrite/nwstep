@@ -59,6 +59,7 @@ type QuestionRepo interface {
 	handlergames.AnswersProvider
 	handlercateg.QuestionsSaver
 	handlercateg.AnswersSaver
+	handlercateg.QuestionsCoursesProvider
 }
 
 func New(port uint32, secret string, users UserRepo, categories CategoryRepo, games GameRepo, questions QuestionRepo) *Server {
@@ -119,8 +120,15 @@ func (s *Server) initApi() {
 			mw.IntParams("category_id"))
 	}
 
-	api.POST("/courses/:course_id/questions", handlercateg.PostQuestion(s.questions, s.questions),
-		mw.IntParams("course_id"), mw.Auth(s.secret, true))
+	{
+		courses := api.Group("/courses", mw.Auth(s.secret, true))
+
+		courses.POST("/:course_id/questions", handlercateg.PostQuestion(s.questions, s.questions),
+			mw.IntParams("course_id"))
+
+		courses.GET("/:course_id/questions", handlercateg.GetQuestions(s.questions, s.questions),
+			mw.IntParams("course_id"))
+	}
 
 	{
 		games := api.Group("/games", mw.Auth(s.secret))

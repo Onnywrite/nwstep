@@ -9,6 +9,18 @@ import (
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
 )
 
+func (pg *PgStorage) Questions(ctx context.Context, courseId int) ([]models.Question, error) {
+	questions, tx, err := cuteql.Query[models.Question](ctx, pg.db, `
+	SELECT * FROM questions
+	WHERE course_id = $1
+	`, courseId)
+	if err != nil {
+		return nil, err
+	}
+
+	return questions, cuteql.Commit(tx)
+}
+
 func (pg *PgStorage) SaveQuestion(ctx context.Context, q models.Question) (*models.Question, error) {
 	saved, tx, err := cuteql.Get[models.Question](ctx, pg.db, `
 	INSERT INTO questions (question, course_id)
