@@ -9,31 +9,17 @@ import (
 	"github.com/Onnywrite/nwstep/internal/lib/cuteql"
 )
 
-func (pg *PgStorage) RandomQuestions(ctx context.Context, courseId, count int) ([]models.Question, error) {
-	questions, tx, err := cuteql.Query[models.Question](ctx, pg.db, `
-	SELECT * FROM questions
-	WHERE course_id = $1
-	ORDER BY RANDOM()
-	LIMIT $2
-	`, courseId, count)
+func (pg *PgStorage) PickRandomQuestions(ctx context.Context, gameId, courseId, count int) error {
+	tx, err := cuteql.Execute(ctx, pg.db, `
+	INSERT INTO games_questions (game_id, question_id, number)
+	SELECT $1 AS game_id, question_id,
+		ROW_NUMBER() OVER (ORDER BY RANDOM()) AS number
+	FROM questions
+	WHERE course_id = $2
+	LIMIT $3
+	`, gameId, courseId, count)
 	if err != nil {
-		return nil, err
-	}
-
-	return questions, cuteql.Commit(tx)
-}
-
-func (pg *PgStorage) SaveGameQuestions(ctx context.Context, questions ...models.GameQuestion) error {
-	insertBuilder := squirrel.Insert("games_questions").
-		Columns("game_id", "question_id", "number")
-
-	for _, question := range questions {
-		insertBuilder = insertBuilder.Values(question.GameId, question.QuestionId, question.Number)
-	}
-
-	tx, err := cuteql.ExecuteSquirreled(ctx, pg.db, insertBuilder.PlaceholderFormat(squirrel.Dollar))
-	if err != nil {
-		return err
+		return fmt.Errorf("pick: %w", err)
 	}
 
 	return cuteql.Commit(tx)

@@ -14,6 +14,40 @@ type CategoriesProvider interface {
 	Categories(context.Context) ([]models.Category, error)
 }
 
+type CategoriesSaver interface {
+	SaveCategory(context.Context, models.Category) (*models.Category, error)
+}
+
+func PostCategory(saver CategoriesSaver) echo.HandlerFunc {
+	type Category struct {
+		Name          string `json:"name"`
+		Description   string `json:"description"`
+		PhotoUrl      string `json:"photoUrl"`
+		BackgroundUrl string `json:"backgroundUrl"`
+	}
+
+	return func(c echo.Context) error {
+		var cat Category
+		if err := c.Bind(&cat); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid request").SetInternal(err)
+		}
+
+		saved, err := saver.SaveCategory(c.Request().Context(), models.Category{
+			Name:          cat.Name,
+			Description:   cat.Description,
+			PhotoUrl:      cat.PhotoUrl,
+			BackgroundUrl: cat.BackgroundUrl,
+		})
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+		}
+
+		c.JSON(http.StatusOK, saved)
+
+		return nil
+	}
+}
+
 func GetCategories(provider CategoriesProvider) echo.HandlerFunc {
 	type Categories struct {
 		Categories []models.Category `json:"categories"`

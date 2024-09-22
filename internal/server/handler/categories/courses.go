@@ -19,6 +19,60 @@ type RatingProvider interface {
 	Rating(context.Context, uuid.UUID, int) (int, error)
 }
 
+type QuestionsSaver interface {
+	SaveQuestion(context.Context, models.Question) (*models.Question, error)
+}
+
+func PostQuestions(saver QuestionsSaver) echo.HandlerFunc {
+	type Question struct {
+		Question string   `json:"question"`
+		Answers  []string `json:"answers"`
+		Correct  int      `json:"correct"`
+	}
+
+	return func(c echo.Context) error {
+		return nil
+	}
+}
+
+type CourseSaver interface {
+	SaveCourse(context.Context, models.Course) (*models.Course, error)
+}
+
+func PostCourse(saver CourseSaver) echo.HandlerFunc {
+	type Course struct {
+		Name          string `json:"name"`
+		Description   string `json:"description"`
+		MinRating     int    `json:"minRating"`
+		OptimalRating int    `json:"optimalRating"`
+		CategoryId    int    `json:"categoryId"`
+		PhotoUrl      string `json:"photoUrl"`
+	}
+
+	return func(c echo.Context) error {
+		var course Course
+		if err := c.Bind(&c); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid request").SetInternal(err)
+		}
+
+		saved, err := saver.SaveCourse(c.Request().Context(), models.Course{
+			Name:          course.Name,
+			Description:   course.Description,
+			MinRating:     course.MinRating,
+			OptimalRating: course.OptimalRating,
+			CategoryId:    course.CategoryId,
+			PhotoUrl:      course.PhotoUrl,
+		})
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal error").SetInternal(err)
+		}
+
+		c.JSON(http.StatusOK, saved)
+
+		return nil
+	}
+}
+
 func GetCourses(provider CoursesProvider, ratingProvider RatingProvider) echo.HandlerFunc {
 	type Course struct {
 		Id            int    `json:"id"`

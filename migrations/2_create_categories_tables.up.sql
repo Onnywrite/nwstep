@@ -3,7 +3,7 @@ CREATE TABLE categories (
     name VARCHAR(100),
     description VARCHAR(200),
     photo_url VARCHAR(200),
-    background_url VARCHAR(200)
+    background_url VARCHAR(200) DEFAULT ''
 );
 
 CREATE TABLE courses (
