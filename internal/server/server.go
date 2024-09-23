@@ -125,15 +125,15 @@ func (s *Server) initApi() {
 	}
 
 	{
-		courses := api.Group("/courses", mw.Auth(s.secret, true))
+		courses := api.Group("/courses")
 
 		courses.DELETE("/:course_id", handlercateg.DeleteCourse(s.categories),
-			mw.IntParams("course_id"))
+			mw.IntParams("course_id"), mw.Auth(s.secret, true))
 		courses.POST("/:course_id/questions", handlercateg.PostQuestion(s.questions, s.questions),
-			mw.IntParams("course_id"))
+			mw.IntParams("course_id"), mw.Auth(s.secret, true))
 
 		courses.GET("/:course_id/questions", handlercateg.GetQuestions(s.questions, s.questions),
-			mw.IntParams("course_id"))
+			mw.IntParams("course_id"), mw.Auth(s.secret, true))
 		courses.GET("/:course_id/questions/rand", handlercateg.GetQuestionsRand(s.questions, s.questions),
 			mw.IntParams("course_id"))
 	}
